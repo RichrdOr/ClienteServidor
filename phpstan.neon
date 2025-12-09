@@ -1,0 +1,11 @@
+parameters:
+    level: 5
+    paths:
+        - config
+        - models
+        - controllers
+    excludePaths:
+        - */vendor/*
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+

@@ -1,0 +1,54 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Configurar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: pdo, pdo_pgsql
+      
+      - name: Validar antes de deploy
+        run: |
+          echo "🔍 Validando código antes del deploy..."
+          find . -name "*.php" -not -path "./vendor/*" -exec php -l {} \;
+      
+      - name: Crear paquete de deploy
+        run: |
+          echo "📦 Creando paquete de deploy..."
+          mkdir -p deploy
+          cp -r config deploy/
+          cp -r models deploy/
+          cp -r controllers deploy/
+          cp -r views deploy/
+          cp -r public deploy/
+          cp -r database deploy/
+          tar -czf deploy.tar.gz deploy/
+          echo "✅ Paquete creado: deploy.tar.gz"
+      
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v3
+        with:
+          name: deployment-package
+          path: deploy.tar.gz
+          retention-days: 7
+      
+      - name: Deploy notification
+        run: |
+          echo "🚀 Paquete de deploy listo"
+          echo "El paquete está disponible en los artifacts de GitHub Actions"
+          echo "Para desplegar manualmente, descarga deploy.tar.gz y extráelo en el servidor"
+
