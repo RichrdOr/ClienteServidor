@@ -69,3 +69,38 @@ INSERT INTO classes (name, instructor, schedule_time, schedule_days, capacity, d
     ('Pilates', 'Laura Sánchez', '10:00:00', 'Lunes, Miércoles, Viernes', 18, 'Clase de pilates para fortalecimiento')
 ON CONFLICT DO NOTHING;
 
+
+-- TABLA DE EQUIPOS (Inventario)
+CREATE TABLE IF NOT EXISTS equipos (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    serial_number VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    status VARCHAR(20) DEFAULT 'available' CHECK (status IN ('available', 'loaned', 'maintenance')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insertar datos de ejemplo
+INSERT INTO equipos (name, serial_number, description) VALUES
+    ('Proyector Epson EB-X41', 'PE-001-X41', 'Proyector para sala de reuniones A'),
+    ('Laptop Dell Latitude 5420', 'LD-002-5420', 'Portátil para uso en eventos'),
+    ('Micrófono Inalámbrico Shure', 'MI-003-SHR', 'Micrófono de solapa')
+ON CONFLICT (serial_number) DO NOTHING;
+
+
+-- TABLA DE PRÉSTAMOS
+CREATE TABLE IF NOT EXISTS prestamos (
+    id SERIAL PRIMARY KEY,
+    equipo_id INT NOT NULL REFERENCES equipos(id) ON DELETE RESTRICT,
+    user_id INT NOT NULL REFERENCES members(id) ON DELETE RESTRICT, -- Asumo 'members' es la tabla de usuarios
+    loan_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    due_date DATE NOT NULL,
+    return_date DATE,
+    loan_status VARCHAR(20) DEFAULT 'active' CHECK (loan_status IN ('active', 'returned', 'overdue', 'cancelled')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Índices
+CREATE INDEX IF NOT EXISTS idx_prestamos_equipo_id ON prestamos (equipo_id);
+CREATE INDEX IF NOT EXISTS idx_prestamos_user_id ON prestamos (user_id);
+
